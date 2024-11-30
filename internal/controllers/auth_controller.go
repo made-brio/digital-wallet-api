@@ -1,9 +1,8 @@
 package controllers
 
 import (
-	"database/sql"
 	"digital-wallet-api/internal/models"
-	"digital-wallet-api/internal/repository"
+	"digital-wallet-api/internal/service"
 	"digital-wallet-api/utils"
 	"net/http"
 	"os"
@@ -14,11 +13,11 @@ import (
 )
 
 type AuthController struct {
-	DB *sql.DB
+	AuthService *service.AuthService
 }
 
-func NewAuthController(db *sql.DB) *AuthController {
-	return &AuthController{DB: db}
+func NewAuthController(service *service.AuthService) *AuthController {
+	return &AuthController{AuthService: service}
 }
 
 func (ac *AuthController) Login(c *gin.Context) {
@@ -29,7 +28,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 	}
 
 	// Get stored password from repository
-	storedPassword, err := repository.GetPasswordByUsername(ac.DB, userInput.Username)
+	storedPassword, err := ac.AuthService.GetPasswordByUsername(userInput.Username)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
@@ -66,7 +65,7 @@ func (ac *AuthController) CreateUser(c *gin.Context) {
 	}
 
 	// Check if user already exists
-	exists, err := repository.CheckUserExists(ac.DB, user.Username)
+	exists, err := ac.AuthService.CheckUserExists(user.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error checking user existence"})
 		return
@@ -85,7 +84,7 @@ func (ac *AuthController) CreateUser(c *gin.Context) {
 
 	user.Password = hashedPassword
 
-	err = repository.CreateUser(ac.DB, user)
+	err = ac.AuthService.CreateUser(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
 		return

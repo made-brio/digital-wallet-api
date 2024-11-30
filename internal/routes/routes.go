@@ -12,6 +12,7 @@ import (
 func RegisterRoutes(router *gin.Engine, db *sql.DB) {
 
 	// Initialize Services
+	authService := service.NewAuthService(db)
 	userService := service.NewUserService(db)
 	walletService := service.NewWalletService(db)
 	transactionService := service.NewTransactionService(db)
@@ -19,7 +20,7 @@ func RegisterRoutes(router *gin.Engine, db *sql.DB) {
 	groupWalletMemberService := service.NewGroupWalletMemberService(db)
 
 	// Authentication
-	authController := controllers.NewAuthController(db)
+	authController := controllers.NewAuthController(authService)
 	authRoutes := router.Group("/api/users")
 	{
 		authRoutes.POST("/login", authController.Login)
